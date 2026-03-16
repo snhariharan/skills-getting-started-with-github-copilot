@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from src.app import app, activities
+import urllib.parse
 
 
 client = TestClient(app)
@@ -55,7 +56,10 @@ def test_signup_adds_participant():
     activity = "Chess Club"
 
     # Act
-    response = client.post(f"/activities/{activity}/signup?email={email}")
+    response = client.post(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/signup",
+        params={"email": email},
+    )
 
     # Assert
     assert response.status_code == 200
@@ -69,7 +73,10 @@ def test_signup_returns_404_for_unknown_activity():
     activity = "Nonexistent Club"
 
     # Act
-    response = client.post(f"/activities/{activity}/signup?email={email}")
+    response = client.post(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/signup",
+        params={"email": email},
+    )
 
     # Assert
     assert response.status_code == 404
@@ -82,7 +89,10 @@ def test_signup_prevents_duplicate_registration():
     activity = "Chess Club"
 
     # Act
-    response = client.post(f"/activities/{activity}/signup?email={email}")
+    response = client.post(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/signup",
+        params={"email": email},
+    )
 
     # Assert
     assert response.status_code == 400
@@ -97,7 +107,10 @@ def test_signup_returns_400_when_activity_is_full():
         activities[activity]["participants"].append(f"filler{i}@mergington.edu")
 
     # Act
-    response = client.post(f"/activities/{activity}/signup?email=overflow@mergington.edu")
+    response = client.post(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/signup",
+        params={"email": "overflow@mergington.edu"},
+    )
 
     # Assert
     assert response.status_code == 400
@@ -112,7 +125,10 @@ def test_unregister_removes_participant():
     activity = "Chess Club"
 
     # Act
-    response = client.delete(f"/activities/{activity}/unregister?email={email}")
+    response = client.delete(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/unregister",
+        params={"email": email},
+    )
 
     # Assert
     assert response.status_code == 200
@@ -126,7 +142,10 @@ def test_unregister_returns_404_for_unknown_activity():
     activity = "Nonexistent Club"
 
     # Act
-    response = client.delete(f"/activities/{activity}/unregister?email={email}")
+    response = client.delete(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/unregister",
+        params={"email": email},
+    )
 
     # Assert
     assert response.status_code == 404
@@ -139,7 +158,10 @@ def test_unregister_returns_404_for_non_participant():
     activity = "Chess Club"
 
     # Act
-    response = client.delete(f"/activities/{activity}/unregister?email={email}")
+    response = client.delete(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/unregister",
+        params={"email": email},
+    )
 
     # Assert
     assert response.status_code == 404
@@ -152,9 +174,15 @@ def test_signup_then_unregister_roundtrip():
     activity = "Drama Club"
 
     # Act: sign up
-    signup_response = client.post(f"/activities/{activity}/signup?email={email}")
+    signup_response = client.post(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/signup",
+        params={"email": email},
+    )
     # Act: unregister
-    unregister_response = client.delete(f"/activities/{activity}/unregister?email={email}")
+    unregister_response = client.delete(
+        f"/activities/{urllib.parse.quote(activity, safe='')}/unregister",
+        params={"email": email},
+    )
 
     # Assert
     assert signup_response.status_code == 200
